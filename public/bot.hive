@@ -1,0 +1,447 @@
+bot ClaraAI
+  description "Your AI best friend and personal executive assistant"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # INBOX MANAGER AGENT
+  # ═══════════════════════════════════════════════════════════════════════════
+  agent InboxManager
+    on input
+      if task == "triage"
+        call integrations.gmail.list with max_results: "10", unread_only: "true" as emails
+        
+        if emails.count == 0
+          return "📭 Inbox zero! Nothing needs your attention."
+        end
+        
+        call ai.generate with prompt: "Categorize these emails by urgency and summarize:\n" + emails as analysis
+        say analysis
+        return analysis
+      end
+    end
+  end
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # CALENDAR ASSISTANT AGENT
+  # ═══════════════════════════════════════════════════════════════════════════
+  agent CalendarAssistant
+    on input
+      if task == "today"
+        call integrations.calendar.list_events with days: "1" as events
+        
+        if events.length == 0
+          return "📅 Clear day ahead! No meetings scheduled."
+        end
+        
+        say "📅 Today's Schedule:"
+        loop event in events
+          say "• " + event.summary
+        end
+        return events
+      end
+    end
+  end
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # CONTENT READER AGENT
+  # ═══════════════════════════════════════════════════════════════════════════
+  agent ContentReader
+    on input
+      if task == "summarize"
+        call ai.summarize.text with text: content, style: "bullet_points" as summary
+        say "📖 Summary:"
+        say summary
+        return summary
+      end
+    end
+  end
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # THINKING PARTNER AGENT
+  # ═══════════════════════════════════════════════════════════════════════════
+  agent ThinkingPartner
+    on input
+      if task == "brainstorm"
+        call ai.generate with prompt: "Generate 10 creative ideas about: " + topic as ideas
+        say "🧠 Ideas:"
+        say ideas
+        return ideas
+      end
+    end
+
+    on input
+      if task == "pros_cons"
+        call ai.generate with prompt: "Analyze pros and cons of: " + decision as analysis
+        say analysis
+        return analysis
+      end
+    end
+  end
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # SOCIAL MANAGER AGENT
+  # ═══════════════════════════════════════════════════════════════════════════
+  agent SocialManager
+    on input
+      if task == "draft_reply"
+        call ai.generate with prompt: "Draft a friendly WhatsApp reply to: " + message as reply
+        say "📱 Draft: " + reply
+        return reply
+      end
+    end
+
+    on input
+      if task == "read_messages"
+        call integrations.whatsapp.list with count: "10" as messages
+        say "📱 Recent WhatsApp messages:"
+        loop msg in messages
+          say "• " + msg.from + ": " + msg.text
+        end
+        return messages
+      end
+    end
+  end
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EXPENSE TRACKER AGENT
+  # ═══════════════════════════════════════════════════════════════════════════
+  agent ExpenseTracker
+    on input
+      if task == "log"
+        call db.store with collection: "expenses", value: { amount: amount, category: category, description: description, date: "now" } as result
+        say "💰 Logged: $" + amount + " for " + category
+        return result
+      end
+    end
+
+    on input
+      if task == "summary"
+        call db.find with collection: "expenses", query: { user_id: user_id } as expenses
+        call ai.generate with prompt: "Summarize these expenses and give budgeting tips:\n" + expenses as analysis
+        say "💰 Monthly Spending Summary:"
+        say analysis
+        return analysis
+      end
+    end
+  end
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # HABIT TRACKER AGENT
+  # ═══════════════════════════════════════════════════════════════════════════
+  agent HabitTracker
+    on input
+      if task == "checkin"
+        call db.find with collection: "habits", query: { user_id: user_id } as habits
+        say "✅ Daily Habit Check-in:"
+        loop habit in habits
+          say "• " + habit.value.name + " (🔥 " + habit.value.streak + " day streak)"
+        end
+        return habits
+      end
+    end
+
+    on input
+      if task == "log"
+        # In a real generic implementation, we'd fetch, update, and store again
+        # simplified here for the pattern demo
+        call db.store with collection: "habit_logs", value: { habit_id: habit_id, date: "now" } as result
+        say "🎉 Great job! Habit logged."
+        return result
+      end
+    end
+
+    on input
+      if task == "add"
+        call db.store with collection: "habits", value: { name: name, frequency: frequency, streak: 0 } as habit
+        say "➕ New habit added: " + name
+        return habit
+      end
+    end
+  end
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # LIFE COACH AGENT
+  # ═══════════════════════════════════════════════════════════════════════════
+  agent LifeCoach
+    on input
+      if task == "motivate"
+        call ai.generate with prompt: "Give me an inspiring, personalized motivational message for someone working on their goals. Be warm and encouraging." as motivation
+        say "✨ " + motivation
+        return motivation
+      end
+    end
+
+    on input
+      if task == "set_goal"
+        call db.store with collection: "goals", value: { goal: goal, deadline: deadline, status: "active" } as result
+        say "🎯 Goal set: " + goal
+        say "📅 Deadline: " + deadline
+        say "You've got this! Let's break it down into steps."
+        return result
+      end
+    end
+
+    on input
+      if task == "review"
+        call db.find with collection: "goals", query: { user_id: user_id, status: "active" } as goals
+        call ai.generate with prompt: "Review these goals and provide actionable next steps:\n" + goals as review
+        say "📊 Goal Progress Review:"
+        say review
+        return review
+      end
+    end
+  end
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # GOSSIP BUDDY AGENT
+  # ═══════════════════════════════════════════════════════════════════════════
+  agent GossipBuddy
+    on input
+      if task == "trending"
+        call http.get with url: "https://api.twitter.com/trends" as trends
+        call ai.generate with prompt: "Summarize what's trending in a fun, gossipy way:\n" + trends as gossip
+        say "☕ Here's the tea..."
+        say gossip
+        return gossip
+      end
+    end
+
+    on input
+      if task == "chat"
+        call ai.generate with prompt: "Respond in a fun, friendly, gossipy tone to: " + message as response
+        say response
+        return response
+      end
+    end
+
+    on input
+      if task == "joke"
+        call ai.generate with prompt: "Tell a clever, witty joke" as joke
+        say "😂 " + joke
+        return joke
+      end
+    end
+  end
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # STUDY BUDDY AGENT
+  # ═══════════════════════════════════════════════════════════════════════════
+  agent StudyBuddy
+    on input
+      if task == "explain"
+        call ai.generate with prompt: "Explain this concept in simple terms with examples: " + topic as explanation
+        say "📚 Here's how I'd explain it:"
+        say explanation
+        return explanation
+      end
+    end
+
+    on input
+      if task == "quiz"
+        call ai.generate with prompt: "Create 5 quiz questions about: " + topic as quiz
+        say "🧠 Pop Quiz Time!"
+        say quiz
+        return quiz
+      end
+    end
+
+    on input
+      if task == "flashcards"
+        call ai.generate with prompt: "Create 10 flashcard pairs (term: definition) for: " + topic as cards
+        say "📇 Flashcards ready:"
+        say cards
+        return cards
+      end
+    end
+
+    on input
+      if task == "pomodoro"
+        say "🍅 Pomodoro Timer Started!"
+        say "Focus for 25 minutes. I'll remind you when it's break time."
+        call timer.set with minutes: "25" as timer
+        return timer
+      end
+    end
+  end
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # WEATHER AGENT
+  # ═══════════════════════════════════════════════════════════════════════════
+  agent WeatherAgent
+    on input
+      if task == "current"
+        call http.get with url: "https://api.openweathermap.org/data/2.5/weather?q=" + location as weather
+        say "🌤️ Weather in " + location + ":"
+        say "Temperature: " + weather.temp + "°"
+        say "Conditions: " + weather.description
+        return weather
+      end
+    end
+
+    on input
+      if task == "outfit"
+        call http.get with url: "https://api.openweathermap.org/data/2.5/weather?q=" + location as weather
+        call ai.generate with prompt: "Suggest an outfit for " + weather.temp + "° and " + weather.description as outfit
+        say "👗 Outfit Suggestion:"
+        say outfit
+        return outfit
+      end
+    end
+  end
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DAILY BRIEFER AGENT
+  # ═══════════════════════════════════════════════════════════════════════════
+  agent DailyBriefer
+    on input
+      if task == "morning"
+        say "☀️ Good morning! Let me brief you..."
+        delegate to WeatherAgent with task: "current", location: "London"
+        delegate to CalendarAssistant with task: "today"
+        delegate to InboxManager with task: "triage"
+        delegate to HabitTracker with task: "checkin"
+        delegate to LifeCoach with task: "motivate"
+      end
+    end
+  end
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # MAIN ORCHESTRATOR
+  # ═══════════════════════════════════════════════════════════════════════════
+  on input
+
+    
+    # Greeting
+    if input contains "hello" or input contains "hey" or input contains "hi"
+      say "👋 Hey! I'm Clara, your AI best friend and personal assistant."
+      say ""
+      say "I can help you with:"
+      say "📧 Emails - 'check my inbox'"
+      say "📅 Calendar - 'what's on today'"
+      say "💰 Expenses - 'log expense', 'spending summary'"
+      say "✅ Habits - 'habit check', 'log habit'"
+      say "🎯 Goals - 'set goal', 'motivate me'"
+      say "☕ Gossip - 'what's trending', 'tell joke'"
+      say "📚 Study - 'explain', 'quiz me', 'flashcards'"
+      say "🌤️ Weather - 'weather', 'outfit'"
+      say "📱 Messages - 'read whatsapp', 'draft reply'"
+      say "☀️ Briefings - 'brief me'"
+      say ""
+      say "What can I help you with?"
+    end
+
+    # Morning briefing
+    if input contains "brief" or input contains "morning"
+      delegate to DailyBriefer with task: "morning"
+    end
+
+    # Email
+    if input contains "inbox" or input contains "email"
+      say "📧 Checking your inbox..."
+      delegate to InboxManager with task: "triage"
+    end
+
+    # Calendar
+    if input contains "calendar" or input contains "schedule" or input contains "today"
+      delegate to CalendarAssistant with task: "today"
+    end
+
+    # Expenses
+    if input contains "expense" or input contains "spent" or input contains "log expense"
+      delegate to ExpenseTracker with task: "log", amount: amount, category: category, description: input
+    end
+
+    if input contains "spending" or input contains "budget"
+      delegate to ExpenseTracker with task: "summary"
+    end
+
+    # Habits
+    if input contains "habit check" or input contains "habits"
+      delegate to HabitTracker with task: "checkin"
+    end
+
+    if input contains "log habit" or input contains "did habit"
+      delegate to HabitTracker with task: "log", habit_id: habit_id
+    end
+
+    if input contains "new habit" or input contains "add habit"
+      delegate to HabitTracker with task: "add", name: name, frequency: "daily"
+    end
+
+    # Life Coach
+    if input contains "motivate" or input contains "inspire"
+      delegate to LifeCoach with task: "motivate"
+    end
+
+    if input contains "set goal" or input contains "new goal"
+      delegate to LifeCoach with task: "set_goal", goal: input, deadline: deadline
+    end
+
+    if input contains "review goals" or input contains "goal progress"
+      delegate to LifeCoach with task: "review"
+    end
+
+    # Gossip
+    if input contains "trending" or input contains "gossip" or input contains "tea"
+      delegate to GossipBuddy with task: "trending"
+    end
+
+    if input contains "joke" or input contains "funny"
+      delegate to GossipBuddy with task: "joke"
+    end
+
+    # Study
+    if input contains "explain" or input contains "teach"
+      delegate to StudyBuddy with task: "explain", topic: input
+    end
+
+    if input contains "quiz"
+      delegate to StudyBuddy with task: "quiz", topic: input
+    end
+
+    if input contains "flashcard"
+      delegate to StudyBuddy with task: "flashcards", topic: input
+    end
+
+    if input contains "pomodoro" or input contains "focus"
+      delegate to StudyBuddy with task: "pomodoro"
+    end
+
+    # Weather
+    if input contains "weather"
+      delegate to WeatherAgent with task: "current", location: "London"
+    end
+
+    if input contains "outfit" or input contains "wear"
+      delegate to WeatherAgent with task: "outfit", location: "London"
+    end
+
+    # Summarize
+    if input contains "summarize" or input contains "summary"
+      delegate to ContentReader with task: "summarize", content: input
+    end
+
+    # Brainstorm
+    if input contains "brainstorm" or input contains "ideas"
+      delegate to ThinkingPartner with task: "brainstorm", topic: input
+    end
+
+    # Pros/cons
+    if input contains "pros" or input contains "cons" or input contains "decide"
+      delegate to ThinkingPartner with task: "pros_cons", decision: input
+    end
+
+    # WhatsApp
+    if input contains "whatsapp" or input contains "messages"
+      delegate to SocialManager with task: "read_messages"
+    end
+
+    if input contains "reply" or input contains "draft"
+      delegate to SocialManager with task: "draft_reply", message: input
+    end
+
+    # Default fallback for unmatched input
+    if input contains "help"
+      say "Try: 'hey', 'check inbox', 'weather', 'motivate me', 'quiz me', or 'brief me'"
+    end
+  end
+end
