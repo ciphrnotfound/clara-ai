@@ -311,14 +311,14 @@ export default function DashboardPage() {
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-normal text-white mb-2">
+          <h1 className="text-3xl font-light text-white mb-2 tracking-tight">
             Welcome back, {profile?.full_name || user?.email?.split("@")[0] || "there"}
           </h1>
-          <p className="text-zinc-500">Here's what I've been working on for you today.</p>
+          <p className="text-zinc-600">Here's what I've been working on for you today.</p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {statsData.map((stat, i) => {
             const colorClasses = {
               emerald: "bg-emerald-500/10 text-emerald-400",
@@ -333,16 +333,21 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="bg-zinc-900/30 border border-white/10 rounded-xl p-6 hover:border-white/20 transition-colors"
+              className="group relative bg-black border border-white/10 rounded-xl p-6 hover:border-white/20 transition-all duration-300 overflow-hidden"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colorClasses[stat.color as keyof typeof colorClasses]}`}>
-                  <stat.icon className="w-5 h-5" />
+              {/* Gradient skew effect on hover */}
+              <div className="absolute right-0 bottom-0 w-1/2 h-full bg-gradient-to-t from-white/5 to-transparent skew-x-12 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              
+              <div className="relative z-10">
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colorClasses[stat.color as keyof typeof colorClasses]} transition-transform duration-300 group-hover:scale-110`}>
+                    <stat.icon className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs text-zinc-600 font-medium group-hover:text-zinc-400 transition-colors">{stat.change}</span>
                 </div>
-                <span className="text-xs text-emerald-400 font-medium">{stat.change}</span>
+                <p className="text-3xl font-light text-white mb-1 tracking-tight">{stat.value}</p>
+                <p className="text-sm text-zinc-600 group-hover:text-zinc-500 transition-colors">{stat.label}</p>
               </div>
-              <p className="text-2xl font-normal text-white mb-1">{stat.value}</p>
-              <p className="text-sm text-zinc-500">{stat.label}</p>
             </motion.div>
           )})}
         </div>
@@ -350,39 +355,43 @@ export default function DashboardPage() {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Active Capabilities */}
           <div className="lg:col-span-2">
-            <div className="bg-zinc-900/30 border border-white/10 rounded-xl p-6">
+            <div className="bg-black border border-white/10 rounded-xl p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-normal text-white">What I Can Do</h2>
-                <button className="text-sm text-zinc-400 hover:text-white transition-colors flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  Customize
+                <h2 className="text-xl font-light text-white">What I Can Do</h2>
+                <button className="group relative text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 overflow-hidden">
+                  <div className="absolute right-0 bottom-0 w-full h-full bg-gradient-to-t from-white/5 to-transparent skew-x-12 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <Plus className="w-4 h-4 relative z-10" />
+                  <span className="relative z-10">Customize</span>
                 </button>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {capabilities.map((capability, i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="flex items-center justify-between p-4 bg-black/30 border border-white/5 rounded-lg hover:border-white/10 transition-colors group cursor-pointer"
+                    className="group relative flex items-center justify-between p-4 bg-black border border-white/10 rounded-lg hover:border-white/20 transition-all duration-300 cursor-pointer overflow-hidden"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                    {/* Gradient skew effect on hover */}
+                    <div className="absolute right-0 bottom-0 w-1/3 h-full bg-gradient-to-t from-white/5 to-transparent skew-x-12 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    
+                    <div className="flex items-center gap-4 relative z-10">
+                      <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center group-hover:bg-white/10 transition-all duration-300 group-hover:scale-110">
                         <capability.icon className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <p className="text-sm font-normal text-white">{capability.name}</p>
-                        <p className="text-xs text-zinc-500">{capability.description} • {capability.tasks} today</p>
+                        <p className="text-sm font-light text-white">{capability.name}</p>
+                        <p className="text-xs text-zinc-600 group-hover:text-zinc-500 transition-colors">{capability.description} • {capability.tasks} today</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 relative z-10">
                       <span
                         className={`w-2 h-2 rounded-full ${
                           capability.status === "active" ? "bg-emerald-400" : "bg-zinc-600"
                         }`}
                       />
-                      <span className="text-xs text-zinc-500 capitalize">{capability.status}</span>
+                      <span className="text-xs text-zinc-600 capitalize group-hover:text-zinc-500 transition-colors">{capability.status}</span>
                     </div>
                   </motion.div>
                 ))}
@@ -392,8 +401,8 @@ export default function DashboardPage() {
 
           {/* Recent Activity */}
           <div className="lg:col-span-1">
-            <div className="bg-zinc-900/30 border border-white/10 rounded-xl p-6">
-              <h2 className="text-xl font-normal text-white mb-6">Recent Activity</h2>
+            <div className="bg-black border border-white/10 rounded-xl p-6">
+              <h2 className="text-xl font-light text-white mb-6">Recent Activity</h2>
               <div className="space-y-4">
                 {recentActivity.map((activity, i) => (
                   <motion.div
@@ -401,18 +410,18 @@ export default function DashboardPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="pb-4 border-b border-white/5 last:border-0 last:pb-0"
+                    className="pb-4 border-b border-white/5 last:border-0 last:pb-0 group"
                   >
                     <div className="flex items-start gap-3">
                       <div
-                        className={`w-2 h-2 rounded-full mt-2 ${
+                        className={`w-2 h-2 rounded-full mt-2 transition-transform duration-300 group-hover:scale-125 ${
                           activity.status === "success" ? "bg-emerald-400" : "bg-yellow-400"
                         }`}
                       />
                       <div className="flex-1">
-                        <p className="text-sm text-white font-normal mb-1">{activity.task}</p>
-                        <p className="text-xs text-zinc-500 mb-1">{activity.action}</p>
-                        <p className="text-xs text-zinc-600">{activity.time}</p>
+                        <p className="text-sm text-white font-light mb-1 group-hover:text-zinc-300 transition-colors">{activity.task}</p>
+                        <p className="text-xs text-zinc-600 mb-1 group-hover:text-zinc-500 transition-colors">{activity.action}</p>
+                        <p className="text-xs text-zinc-700 group-hover:text-zinc-600 transition-colors">{activity.time}</p>
                       </div>
                     </div>
                   </motion.div>
@@ -423,9 +432,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="mt-8 bg-zinc-900/30 border border-white/10 rounded-xl p-6">
-          <h2 className="text-xl font-normal text-white mb-6">Quick Actions</h2>
-          <div className="grid md:grid-cols-4 gap-4">
+        <div className="mt-8 bg-black border border-white/10 rounded-xl p-6">
+          <h2 className="text-xl font-light text-white mb-6">Quick Actions</h2>
+          <div className="grid md:grid-cols-4 gap-3">
             {[
               { label: "Chat with Clara", icon: Plus, href: "/dashboard/chat" },
               { label: "View Calendar", icon: Activity, href: "/dashboard/calendar" },
@@ -433,11 +442,16 @@ export default function DashboardPage() {
               { label: "Get Help", icon: AlertCircle, href: "#" }
             ].map((action, i) => (
               <Link key={i} href={action.href}>
-                <button className="w-full p-4 bg-black/30 border border-white/5 rounded-lg hover:border-white/10 transition-colors text-left group">
-                  <action.icon className="w-5 h-5 text-zinc-400 group-hover:text-white transition-colors mb-2" />
-                  <p className="text-sm text-zinc-400 group-hover:text-white transition-colors">
-                    {action.label}
-                  </p>
+                <button className="group relative w-full p-4 bg-black border border-white/10 rounded-lg hover:border-white/20 transition-all duration-300 text-left overflow-hidden">
+                  {/* Gradient skew effect on hover */}
+                  <div className="absolute right-0 bottom-0 w-full h-full bg-gradient-to-t from-white/5 to-transparent skew-x-12 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  <div className="relative z-10">
+                    <action.icon className="w-5 h-5 text-zinc-600 group-hover:text-white transition-all duration-300 mb-2 group-hover:scale-110" />
+                    <p className="text-sm text-zinc-600 group-hover:text-white transition-colors font-light">
+                      {action.label}
+                    </p>
+                  </div>
                 </button>
               </Link>
             ))}
